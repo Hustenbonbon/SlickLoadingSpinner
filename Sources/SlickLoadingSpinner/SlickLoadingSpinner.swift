@@ -3,6 +3,10 @@ import SwiftUI
 public struct SlickLoadingSpinner: View {
     let connectionState: LoadingState
     
+    public init(connectionState: LoadingState) {
+        self.connectionState = connectionState
+    }
+    
     public var body: some View {
         switch connectionState {
             case .connecting:
