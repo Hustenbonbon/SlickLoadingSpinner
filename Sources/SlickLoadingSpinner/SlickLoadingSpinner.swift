@@ -1,60 +1,92 @@
 import SwiftUI
 
 public struct SlickLoadingSpinner: View {
-    @Binding var connectionState: State
-    
-    public init(connectionState: Binding<State>) {
-        _connectionState = connectionState
-    }
+    let connectionState: LoadingState
     
     public var body: some View {
-        connectionState.image
-            .rotationEffect(connectionState == .connecting ? .degrees(180) : .zero)
-            .animation(connectionState == .connecting ? Animation.easeInOut(duration: 0.6).repeatForever(autoreverses: false) : .easeInOut(duration: 0.5))
+        switch connectionState {
+            case .connecting:
+                EndlessSpinner(image: noTypeImage)
+            case .success:
+                QuarterSpinner(image: noTypeImage)
+            case .failure:
+                QuarterSpinner(image: noTypeImage)
+            case .notStarted:
+                QuarterSpinner(image: noTypeImage)
+                
+        }
     }
     
-    public enum State: String, Equatable, CaseIterable {
-        case wrong = "wrong"
-        case connecting = "connecting"
-        case right = "right"
-        case notStarted = "notStarted"
-        
-        public var image: some View {
-            switch self {
-                case .wrong:
-                    return Image(systemName: "xmark.circle")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundColor(.red)
-                case .connecting:
-                    return Image(systemName: "arrow.2.circlepath.circle")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundColor(.blue)
-                case .right:
-                    return Image(systemName: "checkmark.circle")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundColor(.green)
-                case .notStarted:
-                    return Image(systemName: "ellipsis.circle")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundColor(.gray)
-            }
+    private var image: some View {
+        switch connectionState {
+            case .failure:
+                return Image(systemName: "xmark.circle")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .foregroundColor(.red)
+            case .connecting:
+                return Image(systemName: "arrow.2.circlepath.circle")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .foregroundColor(.blue)
+            case .success:
+                return Image(systemName: "checkmark.circle")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .foregroundColor(.green)
+            case .notStarted:
+                return Image(systemName: "ellipsis.circle")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .foregroundColor(.gray)
         }
+    }
+    
+    private var  noTypeImage: AnyView {
+        AnyView(image)
+    }
+    
+}
+
+private struct EndlessSpinner: View {
+    let image: AnyView
+    
+    @State var spinning = false
+    
+    var body: some View {
+        image
+            .rotationEffect(spinning ? .degrees(180) : .zero)
+            .animation(Animation.easeInOut(duration: 0.6).repeatForever(autoreverses: false))
+            .onAppear {
+                spinning.toggle()
+            }
+    }
+}
+
+private struct QuarterSpinner: View {
+    let image: AnyView
+    
+    @State var turning = true
+    
+    var body: some View {
+        image
+            .rotationEffect(turning ? .degrees(90) : .zero)
+            .animation(.default)
+            .onAppear {
+                turning.toggle()
+            }
     }
 }
 
 struct SlickLoadingSpinner_Previews: PreviewProvider {
     struct IndicatorPreview: View {
-        @State var connectionState = SlickLoadingSpinner.State.notStarted
+        @State var connectionState = LoadingState.notStarted
         
         var body: some View {
             VStack(spacing: 20) {
-                SlickLoadingSpinner(connectionState: $connectionState)
+                SlickLoadingSpinner(connectionState: connectionState)
                 Picker("State", selection: $connectionState, content: {
-                    ForEach(SlickLoadingSpinner.State.allCases, id: \.rawValue) { value in
+                    ForEach(LoadingState.allCases, id: \.rawValue) { value in
                         Text(value.rawValue).tag(value)
                     }
                 }).pickerStyle(SegmentedPickerStyle())
@@ -68,25 +100,25 @@ struct SlickLoadingSpinner_Previews: PreviewProvider {
                 .previewLayout(.sizeThatFits)
                 .padding()
             HStack {
-                SlickLoadingSpinner(connectionState: .constant(.notStarted))
+                SlickLoadingSpinner(connectionState: .notStarted)
                     .padding()
-                SlickLoadingSpinner(connectionState: .constant(.connecting))
+                SlickLoadingSpinner(connectionState: .connecting)
                     .padding()
-                SlickLoadingSpinner(connectionState: .constant(.wrong))
+                SlickLoadingSpinner(connectionState: .failure)
                     .padding()
-                SlickLoadingSpinner(connectionState: .constant(.right))
+                SlickLoadingSpinner(connectionState: .success)
                     .padding()
             }
             .previewLayout(.sizeThatFits)
             .padding()
             HStack {
-                SlickLoadingSpinner(connectionState: .constant(.notStarted))
+                SlickLoadingSpinner(connectionState: .notStarted)
                     .padding()
-                SlickLoadingSpinner(connectionState: .constant(.connecting))
+                SlickLoadingSpinner(connectionState: .connecting)
                     .padding()
-                SlickLoadingSpinner(connectionState: .constant(.wrong))
+                SlickLoadingSpinner(connectionState: .failure)
                     .padding()
-                SlickLoadingSpinner(connectionState: .constant(.right))
+                SlickLoadingSpinner(connectionState: .success)
                     .padding()
             }
             .preferredColorScheme(.dark)
